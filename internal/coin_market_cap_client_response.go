@@ -5,17 +5,17 @@ import (
 )
 
 type CoinMarketCapResponse struct {
-    Status CoinMarketCapResponseStatus `json:"status"`
-    Data CoinMarketCapResponseDataEntry `json:"data"`
+	Status CoinMarketCapResponseStatus    `json:"status"`
+	Data   CoinMarketCapResponseDataEntry `json:"data"`
 }
 
 type CoinMarketCapResponseStatus struct {
-    Timestamp time.Time `json:"timestamp"`
-    ErrorCode int64 `json:"error_code"`
-    ErrorMessage string `json:"error_message"`
-    Elapsed int64 `json:"elapsed"`
-    CreditCount int64 `json:"credit_count"`
-    Notice string `json:"notice"`
+	Timestamp    time.Time `json:"timestamp"`
+	ErrorCode    int64     `json:"error_code"`
+	ErrorMessage string    `json:"error_message"`
+	Elapsed      int64     `json:"elapsed"`
+	CreditCount  int64     `json:"credit_count"`
+	Notice       string    `json:"notice"`
 }
 
 type CoinMarketCapResponseDataEntry struct {
@@ -23,13 +23,13 @@ type CoinMarketCapResponseDataEntry struct {
 }
 
 type CoinMarketCapResponseData struct {
-	Id string `json:"id"`
-	Name string `json:"name"`
-	Symbol string `json:"symbol"`
-	Slug string `json:"slug"`
-	MaxSupply string `json:"max_supply"`
-	LastUpdated time.Time `json:"last_updated:"`
-	Quote CoinMarketCapCurrencyQuote `json:"quote"`
+	Id          int64                      `json:"id"`
+	Name        string                     `json:"name"`
+	Symbol      string                     `json:"symbol"`
+	Slug        string                     `json:"slug"`
+	MaxSupply   *int64                     `json:"max_supply"`
+	LastUpdated time.Time                  `json:"last_updated"`
+	Quote       CoinMarketCapCurrencyQuote `json:"quote"`
 }
 
 type CoinMarketCapCurrencyQuote struct {
@@ -37,8 +37,8 @@ type CoinMarketCapCurrencyQuote struct {
 }
 
 type CoinMarketCapQuote struct {
-	Price float64 `json:"price"`
-	MarketCap float64 `json:"market_cap"`
-	MarketCapDominance float64 `json:"market_cap_dominance"`
-	LastUpdated time.Time `json:"last_updated"`
+	Price              float64   `json:"price"`
+	MarketCap          float64   `json:"market_cap"`
+	MarketCapDominance float64   `json:"market_cap_dominance"`
+	LastUpdated        time.Time `json:"last_updated"`
 }
