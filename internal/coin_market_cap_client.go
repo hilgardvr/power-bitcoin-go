@@ -1,11 +1,11 @@
 package internal
 
 import (
+	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"io"
-	"encoding/json"
 	"os"
 )
 
@@ -15,7 +15,8 @@ func GetBitcoinData(baseUrl, apiKey string, live bool) (CoinMarketCapResponse, e
 	var respBody []byte
 	var err error
 	if live {
-		req, innerErr := http.NewRequest("GET", baseUrl + "/v1/cryptocurrency/quotes/latest", nil)
+		log.Println("Hitting bitcoin price api")
+		req, innerErr := http.NewRequest("GET", baseUrl+"/v1/cryptocurrency/quotes/latest", nil)
 		if innerErr != nil {
 			log.Print(innerErr)
 			return response, innerErr
