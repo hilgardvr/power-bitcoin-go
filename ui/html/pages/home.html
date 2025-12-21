@@ -1,21 +1,45 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Bitcoin</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Power Bitcoin</title>
 </head>
+
 <body>
-    <header>
-        <h1>Bitcoin Power</h1>
-    </header>
-    <main>
-        <h2>Power Law Price Projection</h2>
-        <p>{{ .Price }}</p>
-    </main>
-    <footer>
-        Powered by <a href='https://golang.org/'>Go</a>
-    </footer>
-    
+  <header>
+    <h1>Bitcoin Power</h1>
+  </header>
+  <main>
+    <h2>Power Law Price Projection</h2>
+    <p>Current Price {{ .CurrentPrice }}</p>
+    <p>Model Prices</p>
+    <table>
+      <thead>
+        <th>Year</th>
+        <th>Model Price</th>
+        <th>Annualised Change %</th>
+        <th>Total Change %</th>
+        <th>Next Year Change %</th>
+      </thead>
+      <tbody>
+        {{ range .PriceProjections }}
+        <tr>
+          <td>{{ .Year }}</td>
+          <td>{{ .ModelPrice }}</td>
+          <td>{{ .AnnualisedChange }}</td>
+          <td>{{ .TotalChange }}</td>
+          <td>{{ .NextYearChange }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </main>
+  <footer>
+    Powered by <a href='https://golang.org/'>Go</a>
+  </footer>
+
 </body>
+
 </html>
