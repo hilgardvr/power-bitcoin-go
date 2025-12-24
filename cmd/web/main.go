@@ -30,6 +30,7 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", app.home)
+	mux.Handle("GET /css/output.css", http.StripPrefix("/css", http.FileServer(http.Dir("./ui/css/"))))
 	log.Println("Running server on ", app.Environment.ServerPort)
 	err = http.ListenAndServe(app.Environment.ServerPort, mux)
 	log.Fatal(err)

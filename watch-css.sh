@@ -1,0 +1,1 @@
+./ui/css/tailwindcss-linux-x64 -i ./ui/css/input.css -o ./ui/css/output.css --watch

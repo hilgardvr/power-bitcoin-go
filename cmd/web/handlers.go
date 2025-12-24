@@ -15,6 +15,7 @@ import (
 
 var exponent = 5.80
 var genesisBlock = time.Date(2009, time.January, 3, 0, 0, 0, 0, time.UTC)
+var yearsToCalc = 64
 
 func projectionPriceAt(now time.Time) float64 {
 	days := now.Sub(genesisBlock).Hours() / 24
@@ -94,7 +95,7 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	}
 	tmplData := TemplateData{
 		CurrentPrice:     data.Data.BtcData.Quote.Usd.Price,
-		PriceProjections: priceProjections(data.Data.BtcData.Quote.Usd.Price, 32),
+		PriceProjections: priceProjections(data.Data.BtcData.Quote.Usd.Price, int64(yearsToCalc)),
 	}
 	err = ts.Execute(w, tmplData)
 	if err != nil {
