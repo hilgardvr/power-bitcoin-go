@@ -13,24 +13,24 @@
   </header>
   <main>
     <h2>Power Law Price Projection</h2>
-    <p>Current Price {{ .CurrentPrice }}</p>
+    <p>Current Price {{ .CurrentPrice | prettyPrintFloat64 }}</p>
     <p>Model Prices</p>
     <table>
       <thead>
         <th>Year</th>
         <th>Model Price</th>
         <th>Annualised Change %</th>
-        <th>Total Change %</th>
-        <th>Next Year Change %</th>
+        <th>Total Change Factor</th>
+        <th>Next Year Model Change %</th>
       </thead>
       <tbody>
         {{ range .PriceProjections }}
         <tr>
           <td>{{ .Year }}</td>
-          <td>{{ .ModelPrice }}</td>
-          <td>{{ .AnnualisedChange }}</td>
-          <td>{{ .TotalChange }}</td>
-          <td>{{ .NextYearChange }}</td>
+          <td>{{ .ModelPrice | prettyPrintFloat64 }}</td>
+          <td>{{ .AnnualisedChange | prettyPrintFloat64 }}</td>
+          <td>{{ .TotalChange | prettyPrintFloat64 }}</td>
+          <td>{{ .NextYearChange | prettyPrintFloat64 }}</td>
         </tr>
         {{ end }}
       </tbody>

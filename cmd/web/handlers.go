@@ -8,6 +8,8 @@ import (
 	"sort"
 	"time"
 
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"hilgardvr.com/power-bitcoin-go/internal"
 )
 
@@ -26,36 +28,10 @@ type TemplateData struct {
 
 type PriceProjection struct {
 	Year             int64
-	ModelPrice       int64
-	AnnualisedChange int64
-	TotalChange      int64
-	NextYearChange   int64
-}
-
-func dummyPriceProjections() []PriceProjection {
-	return []PriceProjection{
-		PriceProjection{
-			Year:             0,
-			ModelPrice:       110000,
-			AnnualisedChange: 30.0,
-			TotalChange:      30.0,
-			NextYearChange:   29.0,
-		},
-		PriceProjection{
-			Year:             1,
-			ModelPrice:       130000,
-			AnnualisedChange: 30.0,
-			TotalChange:      30.0,
-			NextYearChange:   29.0,
-		},
-		PriceProjection{
-			Year:             2,
-			ModelPrice:       150000,
-			AnnualisedChange: 25.0,
-			TotalChange:      50.0,
-			NextYearChange:   24.0,
-		},
-	}
+	ModelPrice       float64
+	AnnualisedChange float64
+	TotalChange      float64
+	NextYearChange   float64
 }
 
 func priceProjections(currentPrice float64, count int64) []PriceProjection {
@@ -66,14 +42,16 @@ func priceProjections(currentPrice float64, count int64) []PriceProjection {
 		thisProjection := projectionPriceAt(now.AddDate(int(i), 0, 0))
 		totalNominalChange := thisProjection - currentPrice
 		totalPercentChange := totalNominalChange / currentPrice * 100
+		totalChangeFactor := thisProjection / currentPrice
 		nextProjection := projectionPriceAt(now.AddDate(int(i)+1, 0, 0))
 		nextYearPercentChange := (nextProjection - thisProjection) / thisProjection * 100
+		annualisedPercentChange := annualisedPercentageChange(totalPercentChange, int(i))
 		projection := PriceProjection{
 			Year:             i,
-			ModelPrice:       int64(thisProjection),
-			AnnualisedChange: 10,
-			TotalChange:      int64(totalPercentChange),
-			NextYearChange:   int64(nextYearPercentChange),
+			ModelPrice:       thisProjection,
+			AnnualisedChange: annualisedPercentChange,
+			TotalChange:      totalChangeFactor,
+			NextYearChange:   nextYearPercentChange,
 		}
 		projections = append(projections, projection)
 	}
@@ -83,6 +61,25 @@ func priceProjections(currentPrice float64, count int64) []PriceProjection {
 	return projections
 }
 
+func annualisedPercentageChange(totalPercentChange float64, years int) float64 {
+	if years == 0 {
+		return totalPercentChange
+	}
+	percentFactor := 1 + (totalPercentChange / 100)
+	percent := (math.Pow(percentFactor, 1/float64(years))) * 100
+	return percent - 100
+}
+
+var templateFunctions = template.FuncMap{
+	"prettyPrintFloat64": prettyPrintFloat64,
+}
+
+func prettyPrintFloat64(number float64) string {
+	p := message.NewPrinter(language.English)
+	formatted := p.Sprintf("%.2f", number)
+	return formatted
+}
+
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	log.Println("start :: home")
 	data, err := internal.GetBitcoinData(app.Environment.ApiBaseUrl, app.Environment.CoinMarketCapKey, app.Environment.ApiLive)
@@ -90,19 +87,18 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error getting bitcoin data", err)
 		return
 	}
-	ts, err := template.ParseFiles("./ui/html/pages/home.html")
+	ts, err := template.New("home.html").Funcs(templateFunctions).ParseFiles("./ui/html/pages/home.html")
 	if err != nil {
-		log.Println("Error parsing home.html")
+		log.Println("Error parsing home.html", err)
 		return
 	}
 	tmplData := TemplateData{
-		CurrentPrice: data.Data.BtcData.Quote.Usd.Price,
-		// PriceProjections: dummyPriceProjections(),
-		PriceProjections: priceProjections(data.Data.BtcData.Quote.Usd.Price, 20),
+		CurrentPrice:     data.Data.BtcData.Quote.Usd.Price,
+		PriceProjections: priceProjections(data.Data.BtcData.Quote.Usd.Price, 32),
 	}
 	err = ts.Execute(w, tmplData)
 	if err != nil {
-		log.Println("Failed to execute template")
+		log.Println("Failed to execute template", err)
 		http.Error(w, "Failed to execute template", http.StatusInternalServerError)
 		return
 	}
