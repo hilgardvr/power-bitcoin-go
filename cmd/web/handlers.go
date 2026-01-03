@@ -83,7 +83,7 @@ func prettyPrintFloat64(number float64) string {
 
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	log.Println("start :: home")
-	data, err := internal.GetBitcoinData(app.Environment.ApiBaseUrl, app.Environment.CoinMarketCapKey, app.Environment.ApiLive)
+	data, err := internal.GetBitcoinData(app.Environment.ApiBaseUrl, app.Environment.CoinMarketCapKey, app.Environment.ApiLive, app.DB)
 	if err != nil {
 		log.Println("Error getting bitcoin data", err)
 		return
@@ -94,8 +94,8 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmplData := TemplateData{
-		CurrentPrice:     data.Data.BtcData.Quote.Usd.Price,
-		PriceProjections: priceProjections(data.Data.BtcData.Quote.Usd.Price, int64(yearsToCalc)),
+		CurrentPrice:     data,
+		PriceProjections: priceProjections(data, int64(yearsToCalc)),
 	}
 	err = ts.Execute(w, tmplData)
 	if err != nil {
