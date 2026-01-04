@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"html/template"
 	"log"
 	"math"
@@ -20,6 +22,12 @@ var yearsToCalc = 64
 func projectionPriceAt(now time.Time) float64 {
 	days := now.Sub(genesisBlock).Hours() / 24
 	return math.Pow(10, -17) * math.Pow(days, exponent)
+}
+
+type Price struct {
+	ID        int64
+	Price     float64
+	CreatedAt int64
 }
 
 type TemplateData struct {
@@ -83,7 +91,14 @@ func prettyPrintFloat64(number float64) string {
 
 func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 	log.Println("start :: home")
-	data, err := internal.GetBitcoinData(app.Environment.ApiBaseUrl, app.Environment.CoinMarketCapKey, app.Environment.ApiLive, app.DB)
+	price, err := getCachedPrice(app.DB)
+	if err != nil {
+		price, err = internal.GetBitcoinData(app.Environment.ApiBaseUrl, app.Environment.CoinMarketCapKey, app.Environment.ApiLive, app.DB)
+		_, err := savePrice(price, app.DB)
+		if err != nil {
+			log.Println("failed to persist price cache: ", err)
+		}
+	}
 	if err != nil {
 		log.Println("Error getting bitcoin data", err)
 		return
@@ -94,8 +109,8 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmplData := TemplateData{
-		CurrentPrice:     data,
-		PriceProjections: priceProjections(data, int64(yearsToCalc)),
+		CurrentPrice:     price,
+		PriceProjections: priceProjections(price, int64(yearsToCalc)),
 	}
 	err = ts.Execute(w, tmplData)
 	if err != nil {
@@ -104,4 +119,34 @@ func (app *Application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("end :: home")
+}
+
+func getCachedPrice(db *sql.DB) (float64, error) {
+	now := time.Now().Add(time.Minute * -1).UTC().Unix()
+	stmt := `
+		select id, price, created_at from price
+		where created_at > ?;`
+	rows, err := db.Query(stmt, now)
+	if err != nil {
+		return 0, err
+	}
+	var price Price
+	if rows.Next() {
+		rows.Scan(&price.ID, &price.Price, &price.CreatedAt)
+		log.Println("found next row: ", price)
+	} else {
+		log.Println("no price record found")
+		err = errors.New("no price record found")
+	}
+	return price.Price, err
+}
+
+func savePrice(price float64, db *sql.DB) (int64, error) {
+	stmt := `insert into price (price, created_at) values (?, ?)`
+	result, err := db.Exec(stmt, price, time.Now().UTC().Unix())
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	return id, err
 }
